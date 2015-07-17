@@ -46,6 +46,8 @@ if( ! defined( 'PF_FILES_DIR' ) ) define( 'PF_FILES_DIR', PF_PLUGIN_DIR . 'posti
 if( ! defined( 'PF_PLUGIN_URI' ) ) define( 'PF_PLUGIN_URI', plugins_url( '', __FILE__ ) );
 if( ! defined( 'PF_FILES_URI' ) ) define( 'PF_FILES_URI', PF_PLUGIN_URI . '/postify-files' );
 
+if( ! defined( 'ALLOW_PF_IN_SUBSITE' ) ) define( 'ALLOW_PF_IN_SUBSITE', FALSE );
+
 
 if( ! class_exists( 'Postify' ) ){
 	/**
@@ -86,11 +88,52 @@ if( ! class_exists( 'Postify' ) ){
 
 
 		/**
+		 * Is Post Indexer Enabled?
+		 *
+		 * @since 1.0
+		 * @access public
+		 * @var BOOL	true if PI is enabled, otherwise false
+		 */
+		public $allow_subsite;
+
+
+		/**
+		 * $wpdb variable
+		 *
+		 * @since 1.0
+		 * @access protected
+		 * @var OBJECT	$wpdb variable
+		 */
+		protected $db;
+		
+		
+		/**
+		 * Current post
+		 *
+		 * @since 1.0
+		 * @access protected
+		 * @var OBJECT	curren post
+		 */
+		protected $current_post;
+
+
+		/**
 		 * Defining class constructor
 		 */
 		public function __construct() {
 
-			if( is_multisite() ) $this->ms = true;
+			global $wpdb, $post;
+			$this->db = $wpdb;
+			if( $post ) $this->current_post = $post;
+
+			if( is_multisite() ) {
+				$this->ms = true;
+				if( ALLOW_PF_IN_SUBSITE ){
+					$this->allow_subsite = true;
+				}else{
+					$this->allow_subsite = false;
+				}
+			}
 			else $this->ms = false;
 
 			if( class_exists( 'POST_INDEXER' ) ) $this->pi_enabled = true;
@@ -125,6 +168,7 @@ if( ! class_exists( 'Postify' ) ){
 
 		$pf = new Postify();
 
+		require_once PF_FILES_DIR . '/classes/class.template.php';
 		require_once PF_FILES_DIR . '/classes/class.featured-posts.php';
 		require_once PF_FILES_DIR . '/classes/class.popular-posts.php';
 		require_once PF_FILES_DIR . '/classes/class.recent-posts.php';
