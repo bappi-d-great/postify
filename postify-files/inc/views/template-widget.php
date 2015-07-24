@@ -10,7 +10,11 @@
                 </div>
                 <?php } ?>
                 <?php
-                    $marginLeft = '60px';
+                    if( $args['widget'] == true || $args['widget'] != '' ){
+                        $marginLeft = '60px';
+                    }else{
+                        $marginLeft = '170px';
+                    }
                 ?>
                 <div class="pf_items_title" style="<?php if( $args['thumb'] ) {  ?>margin-left: <?php echo $marginLeft; ?><?php } ?>">
                     <a href="<?php echo get_permalink( $post->ID ) ?>"><?php echo $post->post_title ?></a><br>

@@ -27,7 +27,7 @@ if( ! class_exists( 'PF_Recent_Posts' ) ){
 		 */
 		public function __construct(){
 
-			parent::__construct();
+			parent::init();
 
 		}
 
@@ -72,22 +72,28 @@ if( ! class_exists( 'PF_Recent_Posts' ) ){
 
 				return apply_filters(
 					'pf_recent_network_posts_result',
-					$this->db->get_results( $sql, OBJECT )
+					$this->db->get_results( $sql, OBJECT ),
+					$sql
 					);
 
 			}
 
 			return apply_filters(
 					'pf_recent_posts_result',
-					wp_get_recent_posts( $args, OBJECT )
+					wp_get_recent_posts( $args, OBJECT ),
+					$args
 					);
 
 
 		}
 
-
-
-
 	}
+	
+	function PF_Recent_Posts_init() {
+
+		return PF_Recent_Posts::get_instance();
+	
+	}
+	    
 
 }

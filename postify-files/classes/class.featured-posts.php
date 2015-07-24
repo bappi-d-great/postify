@@ -27,7 +27,7 @@ if( ! class_exists( 'PF_Featured_Posts' ) ){
          */
         public function __construct() {
             
-            parent::__construct();
+            parent::init();
             
             add_action( 'add_meta_boxes', array( &$this, 'add_meta_box' ) );
             add_action( 'save_post', array( &$this, 'pf_featured_meta_cb_save' ) );
@@ -46,8 +46,8 @@ if( ! class_exists( 'PF_Featured_Posts' ) ){
 	 */
         public static function get_instance() {
             
-            if ( ! self::$_instance instanceof PF_TEMPLATE ) {
-                self::$_instance = new PF_TEMPLATE();
+            if ( ! self::$_instance instanceof PF_Featured_Posts ) {
+                self::$_instance = new PF_Featured_Posts();
             }
             
             return self::$_instance;
@@ -119,8 +119,35 @@ if( ! class_exists( 'PF_Featured_Posts' ) ){
             
         }
         
+        
+        public function get_featured_posts( $args ) {
+            
+            $args['meta_query'] = array(
+                    array(
+                    'key' => 'pf_featured_meta',
+                    'value' => 1,
+                    'compare' => '=',
+                    )
+            );
+            $args['ignore_sticky_posts'] = 1;
+            
+        
+            return apply_filters(
+                            'pf_recent_posts_result',
+                            new WP_Query( $args ),
+                            $args
+                            );
+            
+        }
+        
     }
     
-    new PF_Featured_Posts();
+    function PF_Featured_Posts_init() {
+
+	return PF_Featured_Posts::get_instance();
+
+    }
+    
+    $pf_featured_posts = PF_Featured_Posts_init();
     
 }

@@ -1,20 +1,17 @@
-<div class="postify_posts" class="template-1">
-    <h3><?php echo $args['title'];  ?></h3>
+<div class="postify_posts template-2">
+    <h3><?php echo $args['title'] ?></h3>
     <ul>
         <?php foreach( $posts as $post ) {  ?>
-        <li class="chevron">
+        <li>
             <div class="pf_items">
                 <?php  if( $args['thumb'] ) {  ?>
                 <div class="pf_items_thumb">
                      <?php echo self::get_fallback_image( $post, $type ); ?> 
                 </div>
                 <?php } ?>
-                <?php
-                    $marginLeft = '60px';
-                ?>
-                <div class="pf_items_title" style="<?php if( $args['thumb'] ) {  ?>margin-left: <?php echo $marginLeft; ?><?php } ?>">
+                <div class="pf_items_title" style="<?php  if( $args['thumb'] ) {  ?>margin-left: 110px<?php } ?>">
                     <a href="<?php echo get_permalink( $post->ID ) ?>"><?php echo $post->post_title ?></a><br>
-                    <?php if( isset( $args['show_author'] ) && $args['show_author'] ) { ?>
+                    <?php if( isset( $args['author'] ) && $args['author'] ) { ?>
                     <?php
                         printf(
                                __( 'By %s', PF_DOMAIN ),
@@ -37,13 +34,10 @@
     </ul>
 </div>
 <style type="text/css">
-    .pf_items{overflow: hidden}
-    <?php if( ! $args['widget'] ) { ?>
-    .pf_items_thumb{width: 160px; float: left}
-    <?php }else{ ?>
-    .pf_items_thumb{width: 50px; float: left}
-    <?php } ?>
-    .pf_items_thumb img{position: relative; top: 3px;}
-    .postify_posts ul{list-style-type: none; margin: 0 !important; padding: 0 !important}
-    .postify_posts ul li{margin: 0 !important; padding: 0 !important}
+    .template-2 .pf_items{overflow: hidden}
+    .template-2 .pf_items_thumb{width: 100px; float: left}
+    .template-2 .pf_items_thumb img{position: relative; top: 3px;}
+    .postify_posts.template-2 ul{list-style-type: none; margin: 0 !important; padding: 0 !important}
+    .postify_posts.template-2 ul li{margin: 0 !important; padding: 0 !important; width: 50%; padding-right: 15px !important; float: left; box-sizing: border-box;}
+    .postify_posts.template-2 ul li a{text-decoration: none !important; font-weight: bold }
 </style>

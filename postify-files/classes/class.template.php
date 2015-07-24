@@ -61,11 +61,13 @@ if( ! class_exists( 'PF_TEMPLATE' ) ) {
         public static function get_fallback_image( $post, $type ){
             
             $featured_image = '';
+	    $options = get_option( 'pf_settigns_options' );
+	    $default_image = wp_get_attachment_image_src( $options['postify_upload_input'], 'postify-size' );
             
             if( has_post_thumbnail( $post->ID ) ){
-                $featured_image = get_the_post_thumbnail( $post->ID, 'thumbnail' );
+                $featured_image = get_the_post_thumbnail( $post->ID, 'postify-size' );
             }else{
-                $featured_image = '<img width="150" height="150" src="http://fmulti.dev/wp-content/uploads/2015/07/akismet-150x150.jpg" class="attachment-thumbnail wp-post-image" alt="akismet">';
+                $featured_image = '<img width="250" height="250" src="'.$default_image[0].'" class="attachment-thumbnail wp-post-image" alt="akismet">';
             }
             
             return apply_filters(

@@ -121,23 +121,13 @@ if( ! class_exists( 'Postify' ) ){
 		 * Defining class constructor
 		 */
 		public function __construct() {
-
-			global $wpdb, $post;
-			$this->db = $wpdb;
-			if( $post ) $this->current_post = $post;
-
-			if( is_multisite() ) {
-				$this->ms = true;
-				if( ALLOW_PF_IN_SUBSITE ){
-					$this->allow_subsite = true;
-				}else{
-					$this->allow_subsite = false;
-				}
-			}
-			else $this->ms = false;
-
-			if( class_exists( 'POST_INDEXER' ) ) $this->pi_enabled = true;
-			else $this->pi_enabled = false;
+                        
+                        $this->init();
+			add_action( 'init', array( &$this, 'postify_activation' ) );
+                        add_action( 'wp_enqueue_scripts', array( &$this, 'postify_scripts' ) );
+                        add_action( 'admin_enqueue_scripts', array( $this, 'postify_admin_scripts' ) );
+                        add_action( 'admin_menu', array( &$this, 'set_postify_menu' ) );
+                        add_action( 'admin_action_postify_settings_save', array( &$this, 'admin_action_postify_settings_save_cb' ) );
 
 		}
 
@@ -160,13 +150,133 @@ if( ! class_exists( 'Postify' ) ){
 			return self::$_instance;
 
 		}
+                
+                
+                public function init() {
+                    global $wpdb, $post;
+                    $this->db = $wpdb;
+                    if( $post ) $this->current_post = $post;
+
+                    if( is_multisite() ) {
+                            $this->ms = true;
+                            if( ALLOW_PF_IN_SUBSITE ){
+                                    $this->allow_subsite = true;
+                            }else{
+                                    $this->allow_subsite = false;
+                            }
+                    }
+                    else $this->ms = false;
+
+                    if( class_exists( 'POST_INDEXER' ) ) $this->pi_enabled = true;
+                    else $this->pi_enabled = false;
+                }
+		
+		
+		public function postify_activation() {
+			add_image_size( 'postify-size', 250, 250, true );
+		}
+                
+                
+                public function postify_scripts() {
+                    wp_enqueue_script( 'hoverIntent', PF_FILES_URI . '/assets/js/jquery.hoverIntent.minified.js', array( 'jquery' ), '1.0.0' );
+                }
+                
+                public function postify_admin_scripts() {
+                    wp_enqueue_media();
+                    wp_enqueue_script( 'postify-admin', PF_FILES_URI . '/assets/js/postify-admin.js', array( 'jquery' ), '1.0.0' );
+                }
+                
+                public function set_postify_menu() {
+                    add_options_page( __( 'Postify', PF_DOMAIN ), __( 'Postify', PF_DOMAIN ), 'manage_options', 'postify_option_settings', array( $this, 'postify_option_settings' ) );
+                }
+                
+                
+                public function postify_option_settings() {
+                    
+                    $options = get_option( 'pf_settigns_options' );
+                    
+                    ?>
+                    <div class="wrap">
+                        <h2><?php _e( 'Postify Settings', PF_DOMAIN ) ?></h2>
+                        <?php if( isset( $_REQUEST['msg'] ) && $_REQUEST['msg'] != '' ) { ?>
+                        <div class="updated"><p><strong><?php echo $_REQUEST['msg'] ?></strong></p></div>
+                        <?php } ?>
+                        <div class="">
+                            <div id="poststuff">
+                                <div id="post-body" class="metabox-holder columns-2">
+                                    <div id="post-body-content">
+                                        <div class="postbox">
+                                            <h3 class="hndle"><?php _e( 'General Settings', PF_DOMAIN ) ?></h3>
+                                            <div class="inside">
+                                                <div class="postify-content">
+                                                    <form action="<?php echo admin_url( 'admin.php?action=postify_settings_save' ) ?>" method="post">
+                                                        <?php wp_nonce_field( 'pf_featured_settings_meta_box_data', 'pf_featured_settings_box_nonce' ); ?>
+                                                        <table width="100%" cellpadding="5" cellspacing="5">
+                                                            <tr>
+                                                                <td width='200' valign="top">
+                                                                    <strong><?php _e( 'Upload default image' ) ?></strong>
+                                                                </td>
+                                                                <td>
+                                                                    <button class="postify_upload"><?php _e( 'Upload Image', PF_DOMAIN ) ?></button><br><br>
+                                                                    <input type="hidden" class="postify_upload_input" name="postify_upload_input" value="<?php echo isset( $options['postify_upload_input'] ) && $options['postify_upload_input'] != '' ? $options['postify_upload_input'] : '10' ?>">
+                                                                    <?php if( isset( $options['postify_upload_input'] ) && $options['postify_upload_input'] != '' ) { ?>
+                                                                    <div id="featured-footer-image-container">
+                                                                        <?php $image = wp_get_attachment_image_src( $options['postify_upload_input'], 'large' ); ?>
+                                                                        <img width="200" src="<?php echo $image[0] ?>" />
+                                                                    </div>
+                                                                    <?php }else{ ?>
+                                                                    <div id="featured-footer-image-container" class="hidden">
+                                                                        <img src="" width="200" />
+                                                                    </div>
+                                                                    <?php } ?>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                        <p>
+                                                            <input type="submit" name="postify_save" value="<?php _e( 'Save Settings', PF_DOMAIN ) ?>" class="button button-primary">
+                                                        </p>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php
+                }
+                
+                
+                public function admin_action_postify_settings_save_cb() {
+                    
+                    if ( ! isset( $_POST['pf_featured_settings_box_nonce'] ) ) {
+                        return;
+                    }
+                    
+                    if ( ! wp_verify_nonce( $_POST['pf_featured_settings_box_nonce'], 'pf_featured_settings_meta_box_data' ) ) {
+                        return;
+                    }
+                    
+                    update_option( 'pf_settigns_options', $_POST );
+                    
+                    wp_redirect( admin_url( 'options-general.php?page=postify_option_settings&msg=' . urlencode( __( 'Settings saved.', PF_DOMAIN ) ) ) );
+                    
+                    
+                }
 
 	}
+    
+        function Postify_class_init() {
 
+            return Postify::get_instance();
+    
+        }
+        
 	add_action( 'plugins_loaded', 'postify_init' );
 	function postify_init() {
 
-		$pf = new Postify();
+		$pf = Postify_class_init();
 
 		require_once PF_FILES_DIR . '/classes/class.template.php';
 		require_once PF_FILES_DIR . '/classes/class.featured-posts.php';
@@ -174,6 +284,7 @@ if( ! class_exists( 'Postify' ) ){
 		require_once PF_FILES_DIR . '/classes/class.recent-posts.php';
 		require_once PF_FILES_DIR . '/classes/class.related-posts.php';
 		require_once PF_FILES_DIR . '/classes/class.shortcodes.php';
+                require_once PF_FILES_DIR . '/classes/class.widgets.php';
 
 	}
 
